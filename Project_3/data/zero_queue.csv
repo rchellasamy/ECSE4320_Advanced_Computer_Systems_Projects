@@ -1,0 +1,5 @@
+pattern,workload,op,bs,qd,iops_mean,iops_std,bw_mib_s_mean,bw_mib_s_std,lat_us_mean,lat_us_std,cycles_at_3p5ghz_mean,cycles_at_3p5ghz_std,p95_us,p99_us
+random,randread,read,4k,1,3549.264,177.463,13.864,0.693,268.269,13.413,938942,46947,335.34,429.23
+random,randwrite,write,4k,1,6780.901,339.045,26.488,1.324,142.304,7.115,498064,24903,177.88,227.69
+sequential,seqread,read,128k,1,1103.158,55.158,137.895,6.895,885.494,44.275,3099229,154961,1106.87,1416.79
+sequential,seqwrite,write,128k,1,627.016,31.351,78.377,3.919,1601.428,80.071,5604998,280250,2001.79,2562.28

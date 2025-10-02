@@ -1,0 +1,5 @@
+level,latency_ns
+L1,4.0
+L2,12.0
+L3,40.0
+DRAM,95.0
