@@ -108,7 +108,7 @@ Experiments were conducted under WSL2, which imposes some abstraction over hardw
 
 ### Lookup-Only Workload
 
-![Lookup 1e4](results/lookup_1e4_throughput.png)
+![](results/throughput_threads_workload-lookup_keys-10000.png)
 
 **Analysis:**
 
@@ -116,7 +116,7 @@ The coarse-grained design saturates quickly because all lookups serialize. Lock 
 
 ### Insert-Only Workload
 
-![Insert 1e4](results/insert_1e4_throughput.png)
+![](results/throughput_threads_workload-insert_keys-10000.png)
 
 **Analysis:**
 
@@ -124,7 +124,7 @@ Write-heavy workloads amplify contention and cache invalidation. Lock striping r
 
 ### Mixed Workload (70/30)
 
-![Mixed 1e4](results/mixed_1e4_throughput.png)
+![](results/throughput_threads_workload-mixed_keys-10000.png)
 
 **Analysis:**
 
@@ -136,7 +136,7 @@ Performance lies between lookup-only and insert-only cases. Striping consistentl
 
 ### Lookup-Only Workload
 
-![Lookup 1e5](results/lookup_1e5_throughput.png)
+![](results/throughput_threads_workload-lookup_keys-100000.png)
 
 **Analysis:**
 
@@ -144,7 +144,7 @@ As the table grows, cache locality decreases and synchronization overhead domina
 
 ### Insert-Only Workload
 
-![Insert 1e5](results/insert_1e5_throughput.png)
+![](results/throughput_threads_workload-insert_keys-100000.png)
 
 **Analysis:**
 
@@ -152,7 +152,7 @@ Larger working sets increase cache-miss penalties. Striping mitigates contention
 
 ### Mixed Workload (70/30)
 
-![Mixed 1e5](results/mixed_1e5_throughput.png)
+![](results/throughput_threads_workload-mixed_keys-100000.png)
 
 ---
 
@@ -160,7 +160,7 @@ Larger working sets increase cache-miss penalties. Striping mitigates contention
 
 ### Lookup-Only Workload
 
-![Lookup 1e6](results/lookup_1e6_throughput.png)
+![](results/throughput_threads_workload-lookup_keys-1000000.png)
 
 **Analysis:**
 
@@ -168,7 +168,7 @@ The workload becomes memory-bound. Coarse-grained locking shows almost no scalab
 
 ### Insert-Only Workload
 
-![Insert 1e6](results/insert_1e6_throughput.png)
+![](results/throughput_threads_workload-insert_keys-1000000.png)
 
 **Analysis:**
 
@@ -176,7 +176,7 @@ Global locking triggers frequent cache-line invalidations. Lock striping reduces
 
 ### Mixed Workload (70/30)
 
-![Mixed 1e6](results/mixed_1e6_throughput.png)
+![](results/throughput_threads_workload-mixed_keys-1000000.png)
 
 ---
 
