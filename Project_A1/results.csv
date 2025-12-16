@@ -1,0 +1,91 @@
+experiment,pinned,feature,threads,iters,seconds,seconds_mean,seconds_sd,cycles_mean,cycles_sd,perf_elapsed_mean,perf_elapsed_sd,stderr_note,case,cpuA,cpuB,pkgA,pkgB,coreA,coreB,pinA,pinB,threadA_s,threadB_s,pair_s,threadA_tsc,threadB_tsc,pair_tsc,pair_tsc_mean,pair_tsc_sd,stride_elems,thp,mb,reps,touches,touches_per_s,touches_per_s_mean,touches_per_s_sd,mode,bytes
+affinity,0,affinity,2,300000000,0.207796,0.235316,0.02032653475491721,840112607.2857143,69531846.1495152,0.25883441,0.031272888206113056,"Performance counter stats for './affinity --threads 2 --iters 300000000 --pinned 0':
+
+         744465720      cycles:u                                                    
+
+       0.220443901 seconds time elapsed
+
+       0.399070000 seconds user
+       0.015649000 seconds sys | Performance counter st",,,,,,,,,,,,,,,,,,,,,,,,,,,
+affinity,1,affinity,2,300000000,0.213513,0.22876757142857143,0.03015051030535751,810286268.4285715,109635396.58515626,0.2414441037142857,0.03013605361230162,"Performance counter stats for './affinity --threads 2 --iters 300000000 --pinned 1':
+
+         754442451      cycles:u                                                    
+
+       0.226008073 seconds time elapsed
+
+       0.417921000 seconds user
+       0.007960000 seconds sys | Performance counter st",,,,,,,,,,,,,,,,,,,,,,,,,,,
+smt,,smt,,30000000,0.247831,0.2488647142857143,0.004427449950165944,934191600,16193942.900632182,0.2797223647142857,0.012610612825617172,"Performance counter stats for './smt same 30000000':
+
+         929713696      cycles:u                                                    
+
+       0.272724930 seconds time elapsed
+
+       0.512760000 seconds user
+       0.007888000 seconds sys | Performance counter stats for './smt same 30000000':
+
+",same_core_smt_siblings,0,1,0,0,0,0,1,1,0.247372,0.247831,0.247831,469082350,469970130,469970130,471928473.5714286,8396917.179549338,,,,,,,,,,
+smt,,smt,,30000000,0.244041,0.251209,0.005448080658098113,937340496.5714285,17605247.832197737,0.27571146714285716,0.005197113361071556,"Performance counter stats for './smt spread 30000000':
+
+         918907136      cycles:u                                                    
+
+       0.269226121 seconds time elapsed
+
+       0.504565000 seconds user
+       0.008008000 seconds sys | Performance counter stats for './smt spread 30000000",spread_diff_core,0,2,0,0,0,1,1,1,0.244041,0.243991,0.244041,462778140,462668221,462778140,476373861.71428573,10331892.725265406,,,,,,,,,,
+mmu,,mmu,,,0.0753572,0.07864125714285715,0.002552226499608947,201423227.85714287,3449333.0932834963,0.5647671917142857,0.05758049767717647,"Performance counter stats for './mmu --mb 256 --stride 16 --reps 5':
+
+         196729962      cycles:u                                                    
+
+       0.557085998 seconds time elapsed
+
+       0.121004000 seconds user
+       0.429773000 seconds sys | Performance counter stats for './mmu -",,,,,,,,,,,,,,,,,,16,always [madvise] never,256,5,20971520,2.78295e+08,266952285.7142857,8596304.516880425,,
+mmu,,mmu,,,0.0380592,0.035799085714285715,0.001437711991254132,125114823.85714285,2068458.18231064,0.520044014,0.04964599770580218,"Performance counter stats for './mmu --mb 256 --stride 64 --reps 5':
+
+         128348541      cycles:u                                                    
+
+       0.491108605 seconds time elapsed
+
+       0.063577000 seconds user
+       0.421203000 seconds sys | Performance counter stats for './mmu -",,,,,,,,,,,,,,,,,,64,always [madvise] never,256,5,5242880,1.37756e+08,146681857.14285713,5703393.4116597,,
+mmu,,mmu,,,0.0114951,0.011103328571428572,0.00040671189772995535,80729564.85714285,612714.3068866199,0.473100324,0.02130803202449017,"Performance counter stats for './mmu --mb 256 --stride 256 --reps 5':
+
+          81330957      cycles:u                                                    
+
+       0.473493874 seconds time elapsed
+
+       0.047906000 seconds user
+       0.419179000 seconds sys | Performance counter stats for './mmu ",,,,,,,,,,,,,,,,,,256,always [madvise] never,256,5,1310720,1.14024e+08,118204857.14285715,4307358.7342252005,,
+mmu,,mmu,,,0.0057897,0.0056491157142857145,0.00023827909355310592,71612371.71428572,871704.295840824,0.48720757814285715,0.03836593043882617,"Performance counter stats for './mmu --mb 256 --stride 1024 --reps 5':
+
+          70914297      cycles:u                                                    
+
+       0.497879186 seconds time elapsed
+
+       0.064101000 seconds user
+       0.427343000 seconds sys | Performance counter stats for './mmu",,,,,,,,,,,,,,,,,,1024,always [madvise] never,256,5,327680,5.6597e+07,58109714.28571428,2471024.862815642,,
+prefetch,,prefetch,,200000000,0.192587,0.19371257142857143,0.004683100494853591,495672715,7863799.856941535,0.7108143251428571,0.021726717103816188,"Performance counter stats for './prefetch seq 268435456 200000000':
+
+         494635052      cycles:u                                                    
+
+       0.698719117 seconds time elapsed
+
+       0.247906000 seconds user
+       0.443832000 seconds sys | Performance counter stats for './prefet",,,,,,,,,,,,,,,,,,,,,,,,,,seq,268435456
+prefetch,,prefetch,,200000000,3.56382,3.492627142857143,0.08742627305569055,9305607988.714285,169883516.2914731,6.873453252142857,0.08782904207577595,"Performance counter stats for './prefetch rand_idx 268435456 200000000':
+
+        9409537567      cycles:u                                                    
+
+       6.888828711 seconds time elapsed
+
+       5.210396000 seconds user
+       1.671485000 seconds sys | Performance counter stats for './p",,,,,,,,,,,,,,,,,,,,,,,,,,rand_idx,268435456
+prefetch,,prefetch,,200000000,37.7165,30.390714285714285,2.9948441630950513,128045856272.42857,12790931925.766287,32.143361252285715,3.300855482579038,"Performance counter stats for './prefetch ptr_chase 268435456 200000000':
+
+       96761466900      cycles:u                                                    
+
+      40.219454919 seconds time elapsed
+
+      39.357161000 seconds user
+       0.836364000 seconds sys | Performance counter stats for './",,,,,,,,,,,,,,,,,,,,,,,,,,ptr_chase,268435456

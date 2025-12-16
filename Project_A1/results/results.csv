@@ -1,0 +1,85 @@
+experiment,pinned,feature,threads,iters,seconds,seconds_mean,seconds_sd,cycles_mean,cycles_sd,perf_elapsed_mean,perf_elapsed_sd,stderr_note,mode,stride_elems,thp,mb,reps,touches,touches_per_s,touches_per_s_mean,touches_per_s_sd,pattern
+affinity,0,affinity,2,300000000,0.236008,0.24689933333333333,0.00994427410903157,864098611.6666666,45563862.87299391,0.263963335,0.006782589024751972,"Performance counter stats for './affinity --threads 2 --iters 300000000 --pinned 0':
+
+         826271511      cycles:u                                                    
+
+       0.262110848 seconds time elapsed
+
+       0.478888000 seconds user
+       0.000000000 seconds sys | Performance counter st",,,,,,,,,,
+affinity,1,affinity,2,300000000,0.262847,0.2542853333333333,0.020145390843123938,889097642.3333334,61163450.37418876,0.26659100766666666,0.020061264766833748,"Performance counter stats for './affinity --threads 2 --iters 300000000 --pinned 1':
+
+         925844235      cycles:u                                                    
+
+       0.274855886 seconds time elapsed
+
+       0.508031000 seconds user
+       0.007937000 seconds sys | Performance counter st",,,,,,,,,,
+smt_proxy,,,,,,,,2261121,100649.6838842527,0.05144403066666667,0.006074338199265843,"terminate called after throwing an instance of 'std::invalid_argument'
+  what():  stoull
+./smt: Aborted
+
+ Performance counter stats for './smt --mode shared --iters 300000000':
+
+           2267444      cycles:u                                                    
+
+       0.059573667 seconds time elap",shared,,,,,,,,,
+smt_proxy,,,,,,,,2104497.6666666665,47841.19703305463,0.04422948633333333,0.0009783549466409881,"terminate called after throwing an instance of 'std::invalid_argument'
+  what():  stoull
+./smt: Aborted
+
+ Performance counter stats for './smt --mode spread --iters 300000000':
+
+           2138309      cycles:u                                                    
+
+       0.043183975 seconds time elap",spread,,,,,,,,,
+mmu,,mmu,,,0.142393,0.13935466666666665,0.0030809005537703097,308245405.6666667,5422403.825641068,0.7115617223333333,0.08426582187481216,"Performance counter stats for './mmu --mb 256 --stride 16 --reps 5':
+
+         313691806      cycles:u                                                    
+
+       0.787566284 seconds time elapsed
+
+       0.200150000 seconds user
+       0.579602000 seconds sys | Performance counter stats for './mmu -",,16,always [madvise] never,256,5,20971520,1.47279e+08,150564666.66666666,3368074.260200066,
+mmu,,mmu,,,0.0518842,0.05239053333333333,0.0004086216859421711,154530652,813031.8316146464,0.548392328,0.027143169846847923,"Performance counter stats for './mmu --mb 256 --stride 64 --reps 5':
+
+         153460054      cycles:u                                                    
+
+       0.512253346 seconds time elapsed
+
+       0.080913000 seconds user
+       0.424795000 seconds sys | Performance counter stats for './mmu -",,64,always [madvise] never,256,5,5242880,1.0105e+08,100079200.0,781007.0080778191,
+mmu,,mmu,,,0.0189047,0.0177861,0.0007920865777594432,93348352.33333333,2649346.378247577,0.5622653566666667,0.07884542385412113,"Performance counter stats for './mmu --mb 256 --stride 256 --reps 5':
+
+          96906285      cycles:u                                                    
+
+       0.490698047 seconds time elapsed
+
+       0.064118000 seconds user
+       0.420777000 seconds sys | Performance counter stats for './mmu ",,256,always [madvise] never,256,5,1310720,6.93329e+07,73835433.33333333,3189186.005167393,
+mmu,,mmu,,,0.00770269,0.007883313333333333,0.0006497439759542901,75668238,1313228.634472307,0.48427594966666665,0.01855334919319484,"Performance counter stats for './mmu --mb 256 --stride 1024 --reps 5':
+
+          76101121      cycles:u                                                    
+
+       0.480903269 seconds time elapsed
+
+       0.063134000 seconds user
+       0.410373000 seconds sys | Performance counter stats for './mmu",,1024,always [madvise] never,256,5,327680,4.2541e+07,41842200.0,3351762.235004148,
+prefetch,,,,,,,,2236242.6666666665,125294.24201809471,0.04654125966666667,0.002250466760549662,"terminate called after throwing an instance of 'std::invalid_argument'
+  what():  stoull
+./prefetch: Aborted
+
+ Performance counter stats for './prefetch --mb 128 --pattern seq --reps 1':
+
+           2220537      cycles:u                                                    
+
+       0.043637958 seconds",,,,,,,,,,seq
+prefetch,,,,,,,,2140741.3333333335,12275.524953699083,0.04591055933333333,0.003390346778975209,"terminate called after throwing an instance of 'std::invalid_argument'
+  what():  stoull
+./prefetch: Aborted
+
+ Performance counter stats for './prefetch --mb 128 --pattern rand --reps 1':
+
+           2155082      cycles:u                                                    
+
+       0.043444672 second",,,,,,,,,,rand
