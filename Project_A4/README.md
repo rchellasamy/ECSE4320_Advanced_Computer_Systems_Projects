@@ -1,32 +1,30 @@
 # Project A4: Concurrent Data Structures and Memory Coherence
 
-**Course:** ECSE 4320/6320 – Advanced Computer Systems
+**Course:** ECSE 4320 – Advanced Computer Systems  
 **Author:** Rithvik Chellasamy
-**Platform:** WSL2 (Ubuntu on x86-64)
-**Compiler:** g++ (version recorded in results CSV)
 
 ---
 
 ## 1. Overview
 
-Modern multicore systems rely on shared in-memory data structures accessed concurrently by many threads. While hardware cache coherence ensures correctness at the cache-line level, *scalability and performance* depend critically on synchronization design and lock granularity.
+Modern multicore programs rely on shared in-memory data structures that are accessed concurrently by many threads. While hardware cache coherence guarantees correctness at the cache-line level, overall performance and scalability depend on **synchronization strategy, lock granularity, and contention patterns**.
 
-This project implements and evaluates a **thread-safe hash table** under two synchronization strategies:
+In this project, I implement and evaluate a **thread-safe hash table** under two synchronization designs:
 
-1. **Coarse-grained locking**: a single global mutex protecting all operations
-2. **Lock striping**: multiple mutexes protecting disjoint subsets of buckets
+1. **Coarse-grained locking** using a single global mutex
+2. **Lock striping** using multiple independent mutexes
 
-We study how these designs behave under different workloads, thread counts, and data set sizes, and interpret results using **cache-coherence effects** and **Amdahl’s Law**.
+By running controlled multithreaded workloads, this project studies how these designs scale with thread count and workload mix, and explains observed behavior using **cache coherence effects** and **Amdahl’s Law**.
 
 ---
 
-## 2. Data Structure & Correctness Invariants
+## 2. Data Structure and Correctness
 
 ### Hash Table Design
 
 * Separate chaining with singly linked lists
-* Fixed-size value payloads
-* Integer keys
+* Integer keys and fixed-size values
+* Fixed bucket count per experiment
 
 ### Supported Operations
 
@@ -39,21 +37,17 @@ We study how these designs behave under different workloads, thread counts, and 
 **Coarse-Grained Version**
 
 * A single global `std::mutex` guards the entire table
-* At most one thread may execute any operation at a time
-* Guarantees linearizability by construction
+* At most one operation executes at any time
+* Linearizability follows directly from mutual exclusion
 
 **Striped Lock Version**
 
-* The table is divided into `STRIPES = 64` lock stripes
+* The table is partitioned into a fixed number of lock stripes
 * Each bucket maps deterministically to exactly one stripe
-* Each operation acquires **exactly one mutex**
-* No nested locking → no deadlock
+* Each operation acquires exactly one mutex
+* No nested locking, so deadlock is impossible
 
-### Memory Safety
-
-* Nodes are allocated and freed only while holding the relevant lock
-* No pointers escape a protected critical section
-* No memory reclamation races are possible under this locking scheme
+All node allocation and reclamation occurs while holding the appropriate lock, preventing memory races.
 
 ---
 
@@ -61,23 +55,23 @@ We study how these designs behave under different workloads, thread counts, and 
 
 ### Coarse-Grained Locking (Baseline)
 
-All operations acquire a single global mutex:
+This design prioritizes simplicity:
 
-* Simple and correct
 * Minimal bookkeeping
-* Maximum contention
+* Straightforward correctness reasoning
+* Maximum contention under concurrency
 
-This design is expected to scale poorly due to serialization of all operations.
+Because all operations serialize, scalability is expected to be poor as thread count increases.
 
 ### Lock Striping (Improved Design)
 
-Lock striping reduces contention by partitioning the hash table:
+Lock striping reduces contention by allowing operations on different parts of the table to proceed independently:
 
-* Threads operating on different stripes proceed in parallel
-* Critical sections are shorter and less contended
-* Still simple enough to reason about correctness
+* Contention is localized to individual stripes
+* Critical sections are shorter
+* Synchronization overhead increases slightly
 
-This design trades slightly higher overhead for substantially improved scalability.
+This design aims to improve scalability while preserving correctness and simplicity.
 
 ---
 
@@ -85,36 +79,32 @@ This design trades slightly higher overhead for substantially improved scalabili
 
 ### Workloads
 
-Each experiment runs against a **single shared hash table**:
+All experiments operate on a **single shared hash table**:
 
-1. **Lookup-only**: 100% `find` operations (read-dominated)
-2. **Insert-only**: 100% `insert` operations (write stress test)
-3. **Mixed (70/30)**: 70% `find`, 30% updates (`insert` / `erase`)
+1. **Lookup-only**: 100% `find` operations
+2. **Insert-only**: 100% `insert` operations
+3. **Mixed (70/30)**: 70% lookups, 30% updates
 
 ### Parameters
 
-* **Key set sizes:** 10⁴, 10⁵, 10⁶
-* **Threads:** 1, 2, 4, 8, 16
-* **Repetitions:** multiple runs per configuration
-* **Warm-up:** initial iterations discarded
+* Key set sizes: 10⁴, 10⁵, 10⁶
+* Threads: 1, 2, 4, 8, 16
+* Multiple repetitions per configuration
+* Initial warm-up iterations discarded
 
 ### Metrics
 
 * Throughput (operations per second)
-* Speedup relative to 1 thread
-* `perf stat` counters where available:
+* Speedup relative to single-thread performance
+* Cache-miss metrics where available
 
-  * cycles
-  * instructions
-  * cache references / misses
+### Note on Measurement Environment
 
-### Note on WSL2 and `perf`
-
-Experiments were conducted under **WSL2**, which limits access to some hardware performance counters. While `cycles`, `instructions`, and cache metrics were available in this environment, results should be interpreted with this abstraction layer in mind. Where necessary, cache-coherence effects are inferred from scaling behavior rather than raw event counts.
+Experiments were conducted under WSL2, which imposes some abstraction over hardware counters. Scaling trends and throughput behavior are therefore emphasized over absolute counter values, and coherence effects are inferred from performance patterns.
 
 ---
 
-## 5. Results: Key Set Size = 10⁴
+## 5. Results (Key Set Size = 10⁴)
 
 ### Lookup-Only Workload
 
@@ -122,9 +112,7 @@ Experiments were conducted under **WSL2**, which limits access to some hardware 
 
 **Analysis:**
 
-* Coarse-grained locking saturates early due to full serialization
-* Striped locking scales to higher thread counts
-* Read-only workload still suffers contention under a global lock
+The coarse-grained design saturates quickly because all lookups serialize. Lock striping allows parallel reads across independent stripes, improving throughput as threads increase.
 
 ### Insert-Only Workload
 
@@ -132,8 +120,7 @@ Experiments were conducted under **WSL2**, which limits access to some hardware 
 
 **Analysis:**
 
-* Writes amplify contention and coherence traffic
-* Striping reduces invalidation pressure by localizing updates
+Write-heavy workloads amplify contention and cache invalidation. Lock striping reduces the scope of invalidations, leading to higher throughput.
 
 ### Mixed Workload (70/30)
 
@@ -141,12 +128,11 @@ Experiments were conducted under **WSL2**, which limits access to some hardware 
 
 **Analysis:**
 
-* Performance lies between lookup-only and insert-only cases
-* Striping provides consistent gains across thread counts
+Performance lies between lookup-only and insert-only cases. Striping consistently outperforms coarse locking.
 
 ---
 
-## 6. Results: Key Set Size = 10⁵
+## 6. Results (Key Set Size = 10⁵)
 
 ### Lookup-Only Workload
 
@@ -154,8 +140,7 @@ Experiments were conducted under **WSL2**, which limits access to some hardware 
 
 **Analysis:**
 
-* Larger tables reduce cache residency
-* Coarse-grained design becomes bottlenecked even earlier
+As the table grows, cache locality decreases and synchronization overhead dominates earlier. Coarse-grained locking becomes a bottleneck at low thread counts.
 
 ### Insert-Only Workload
 
@@ -163,21 +148,15 @@ Experiments were conducted under **WSL2**, which limits access to some hardware 
 
 **Analysis:**
 
-* Increased working set magnifies coherence overhead
-* Striping maintains higher throughput under contention
+Larger working sets increase cache-miss penalties. Striping mitigates contention by limiting coherence traffic to individual stripes.
 
 ### Mixed Workload (70/30)
 
 ![Mixed 1e5](results/mixed_1e5_throughput.png)
 
-**Analysis:**
-
-* Mixed workloads highlight the cost of serialized updates
-* Lock striping amortizes synchronization overhead
-
 ---
 
-## 7. Results: Key Set Size = 10⁶
+## 7. Results (Key Set Size = 10⁶)
 
 ### Lookup-Only Workload
 
@@ -185,8 +164,7 @@ Experiments were conducted under **WSL2**, which limits access to some hardware 
 
 **Analysis:**
 
-* Memory-bound behavior dominates
-* Coarse-grained locking shows near-zero scalability
+The workload becomes memory-bound. Coarse-grained locking shows almost no scalability, while striping continues to provide modest gains.
 
 ### Insert-Only Workload
 
@@ -194,42 +172,36 @@ Experiments were conducted under **WSL2**, which limits access to some hardware 
 
 **Analysis:**
 
-* Frequent cache-line invalidations under global locking
-* Striping significantly reduces coherence traffic per operation
+Global locking triggers frequent cache-line invalidations. Lock striping reduces invalidation scope, improving throughput.
 
 ### Mixed Workload (70/30)
 
 ![Mixed 1e6](results/mixed_1e6_throughput.png)
 
-**Analysis:**
-
-* Represents realistic database-style access
-* Striping consistently outperforms coarse locking
-
 ---
 
 ## 8. Speedup and Amdahl’s Law
 
-Across all key sizes, the coarse-grained design exhibits minimal speedup beyond 2 threads. This behavior is predicted by **Amdahl’s Law**: as the serialized fraction of execution dominates, additional cores provide diminishing returns.
+Across all configurations, the coarse-grained design exhibits minimal speedup beyond a small number of threads. This behavior aligns with **Amdahl’s Law**, as the serialized critical section dominates execution time.
 
-In contrast, lock striping reduces the serialized fraction, shifting the scalability limit and enabling higher parallel efficiency.
+Lock striping reduces the serialized fraction, shifting the scalability limit and enabling higher parallel efficiency.
 
 ---
 
 ## 9. Cache Coherence Interpretation
 
-Observed trends align with coherence theory:
+Observed trends are consistent with coherence behavior:
 
-* Global locking causes frequent cache-line invalidations
-* Writes force exclusive ownership, stalling other cores
-* Striping localizes coherence traffic to independent stripes
-* Larger key sets exacerbate cache miss penalties
+* Global locks cause frequent cache-line invalidations
+* Writes require exclusive ownership, stalling other cores
+* Striping localizes coherence traffic
+* Larger key sets amplify cache-miss penalties
 
-These effects explain why improvements are largest for write-heavy and mixed workloads.
+These effects explain why striping provides the largest benefits under write-heavy and mixed workloads.
 
 ---
 
-## 10. Summary of Findings
+## 10. Summary
 
 | Design        | Scalability | Contention | Complexity |
 | ------------- | ----------- | ---------- | ---------- |
@@ -251,7 +223,7 @@ All results are generated automatically and stored as CSV and PNG files under `r
 
 ## 12. Conclusion
 
-This project demonstrates that synchronization granularity is a first-order performance concern on multicore systems. While coarse-grained locking ensures correctness, it severely limits scalability due to contention and cache-coherence traffic. Lock striping provides a practical and effective improvement, balancing correctness, performance, and implementation complexity.
+This project demonstrates that synchronization granularity is a first-order performance concern in concurrent systems. While coarse-grained locking ensures correctness with minimal complexity, it severely limits scalability. Lock striping offers a practical improvement by reducing contention and coherence traffic, providing better performance while remaining relatively simple to reason about.
 
 ---
 
