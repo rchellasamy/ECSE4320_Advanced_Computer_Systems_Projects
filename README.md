@@ -1,5 +1,7 @@
 # Advanced Computer Systems Projects (Fall 2025)
 
+Update: In addition to the original three projects (Projects 1–3), this repository now also includes Projects A1, A3, and A4
+
 This repository contains my work for three major projects in ECSE 4320/6320: Advanced Computer Systems. Each project explores a different aspect of system performance profiling and analysis. Altogether, I spent around **60 hours** across the three projects. The time was mostly divided between learning the tools (`fio`, Intel MLC, custom profiling scripts), running experiments, cleaning and parsing results, and writing up the explanations.
 
 ---
