@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/amq_bench.dir/src/main.cpp.o -o amq_bench 
