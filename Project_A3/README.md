@@ -1,170 +1,211 @@
-Project A3: Approximate Membership Filters
+# Project A3: Approximate Membership Filters
 
-Bloom vs XOR vs Cuckoo vs Quotient
+**Course:** ECSE 4320 – Advanced Computer Systems  
+**Author:** Rithvik Chellasamy
 
-Author: Rithvik Chellasamy
-System: x86-64 laptop (Linux / WSL2)
-Compiler: g++ with -O3
-Benchmark: amq_bench (custom harness)
+---
 
-1. Overview
+## 1. Overview
 
-Approximate membership filters (AMQs) answer set membership queries with no false negatives and controlled false positives, trading accuracy for space and speed. Modern systems rely on AMQs for indexing, caching, and networking, where memory footprint and throughput are critical.
+Approximate membership filters (AMQs) answer set membership queries with **no false negatives** and **controllable false positives**, trading accuracy for space and speed. These data structures are foundational in modern systems for caching, indexing, networking, and storage, where memory footprint and lookup throughput dominate performance.
 
-The goal of this project is to empirically evaluate four AMQ designs under a common benchmark harness:
+This project implements and empirically evaluates four AMQ designs under a common benchmark harness:
 
-Blocked Bloom Filter
+* **Blocked Bloom Filter** (baseline, static)
+* **XOR Filter** (static)
+* **Cuckoo Filter** (dynamic, supports deletions)
+* **Quotient Filter** (dynamic, supports deletions)
 
-XOR Filter
+Rather than relying on asymptotic analysis, the goal is to **measure real trade-offs** in space efficiency, false positive behavior, and throughput under realistic workloads.
 
-Cuckoo Filter
+---
 
-Quotient Filter
+## 2. Experimental Setup & Reproducibility
 
-The evaluation focuses on:
+### System
 
-Space vs false positive tradeoffs
+* Platform: x86-64 laptop CPU
+* OS: Linux (WSL2)
+* Compiler: `g++` with `-O3`
+* Benchmark harness: `amq_bench` (custom)
 
-Lookup throughput under varying workloads
+### Controls and Fairness
 
-Dynamic behavior under load and mixed operations
+To ensure apples-to-apples comparisons:
 
-All results are measured experimentally rather than inferred from theory.
+* All filters store **1,000,000 uniformly random 64-bit keys**
+* False positives are measured using an **independent negative query set**
+* Benchmarks are **single-threaded** to isolate data structure behavior
+* Each configuration is run multiple times and averaged
 
-2. Reproducibility and Experimental Control
+Each filter is tuned using its *natural accuracy parameter*:
 
-To ensure meaningful comparisons:
+* Bloom filter: target false positive rate
+* XOR filter: fingerprint width (bits)
+* Cuckoo filter: fingerprint width (bits)
+* Quotient filter: remainder width (bits)
 
-All filters store 1,000,000 uniformly random 64-bit keys
+This avoids misleading comparisons caused by mismatched configurations.
 
-False positives are measured using an independent negative query set
+---
 
-Benchmarks are single-threaded to isolate data structure behavior
+## 3. Repository Layout
 
-Each configuration is repeated and averaged
+```
+Project_A3/
+├── src/                 # Filter implementations and benchmark harness
+├── scripts/             # Automation and plotting scripts
+├── build/
+│   ├── results_a3/      # Raw CSV outputs
+│   │   ├── bloom_fpr.csv
+│   │   ├── cuckoo_load.csv
+│   │   ├── cuckoo_mixed.csv
+│   │   ├── qf_load.csv
+│   │   ├── qf_mixed.csv
+│   │   ├── qf_rbits.csv
+│   │   ├── cuckoo_fpbits.csv
+│   │   ├── xor_fpbits.csv
+│   │   └── thr_vs_neg.csv
+│   └── plots_a3/        # Generated plots
+│       ├── bpe_vs_fpr.png
+│       ├── throughput_vs_neg_share.png
+│       ├── cuckoo_load_throughput_vs_load.png
+│       ├── cuckoo_load_insert_fail_vs_load.png
+│       ├── qf_load_throughput_vs_load.png
+│       ├── cuckoo_mixed_throughput_vs_qfrac.png
+│       └── qf_mixed_throughput_vs_qfrac.png
+```
 
-All filters are tuned using their natural control parameter
+All figures referenced below are loaded directly from `build/plots_a3/`.
 
-Filter tuning parameters
+---
 
-Bloom filter: target false positive rate
+## 4. Experiment 1: Space vs Accuracy
 
-XOR filter: fingerprint size (bits)
-
-Cuckoo filter: fingerprint size (bits)
-
-Quotient filter: remainder size (bits)
-
-This avoids unfair comparisons caused by mismatched configurations.
-
-3. Build and Run Instructions
-
-From the repository root:
-
-mkdir build
-cd build
-cmake ..
-cmake --build . -j
-./validate
-
-
-To reproduce all results and plots:
-
-../scripts/run_a3_all.sh
-../scripts/plot_a3.sh
-
-4. Experiment 1: Space vs Accuracy
-Question
+### Question
 
 How do different AMQ designs trade memory usage for false positive rate?
 
-Methodology
+### Methodology
 
-Each filter is configured across a sweep of accuracy parameters
+* Each filter is configured across a sweep of accuracy parameters
+* **Bits per entry (BPE)** is computed from the actual memory footprint, including metadata
+* Achieved false positive rate is measured empirically using negative queries
 
-Bits per entry (BPE) is computed from the actual memory footprint
+### Results
 
-Achieved false positive rate is measured empirically using negative queries
+![Bits per Entry vs FPR](build/plots_a3/bpe_vs_fpr.png)
 
-Results
+### Analysis
 
-Analysis
+* **Bloom filters** achieve the lowest BPE at moderate false positive rates due to minimal metadata, but are static and do not support deletions.
+* **XOR filters** deliver extremely compact representations and high throughput, but accuracy control is coarse: increasing fingerprint width significantly increases space with diminishing FPR improvement.
+* **Cuckoo filters** exhibit a smooth trade-off: increasing fingerprint size linearly increases space while exponentially reducing false positives, making them attractive when deletions are required.
+* **Quotient filters** follow a similar trend to Cuckoo filters but incur additional metadata overhead to encode runs, resulting in higher BPE at comparable FPR.
 
-Bloom filters achieve the lowest bits per entry at moderate false positive rates, reflecting their minimal metadata overhead. However, Bloom filters are static and do not support deletions.
+### Takeaway
 
-XOR filters show very high throughput but coarse accuracy control. Increasing fingerprint size significantly increases space usage while only modestly improving false positive rate, producing a near-vertical tradeoff curve.
+Bloom filters dominate when deletions are unnecessary, while Cuckoo and Quotient filters trade space for dynamic updates. XOR filters prioritize speed and compactness over flexibility.
 
-Cuckoo filters exhibit a smooth and predictable tradeoff. Increasing fingerprint size linearly increases space while exponentially reducing false positives, making Cuckoo filters effective when deletions are required.
+---
 
-Quotient filters follow a similar trend to Cuckoo filters but require additional metadata to encode runs. This results in consistently higher space usage at comparable false positive rates.
+## 5. Experiment 2: Throughput vs Negative Lookup Share
 
-Takeaway
-
-Bloom filters are most space-efficient when deletions are not required.
-Cuckoo and Quotient filters trade additional space for dynamic updates.
-XOR filters prioritize speed over flexibility.
-
-5. Experiment 2: Throughput vs Negative Lookup Share
-Question
+### Question
 
 How does lookup throughput change as the fraction of negative queries varies?
 
-Methodology
+### Methodology
 
-Lookup workloads are generated with varying fractions of negative queries
+* Lookup workloads are generated with varying negative-query fractions
+* All filters are fixed to comparable accuracy levels
+* Throughput is measured in operations per second
 
-All filters are fixed to comparable accuracy levels
+### Results
 
-Throughput is measured as operations per second
+![Throughput vs Negative Share](build/plots_a3/throughput_vs_neg_share.png)
 
-Results
+### Analysis
 
-Analysis
+* **Bloom and XOR filters** achieve the highest throughput overall due to predictable memory access and early termination on negative queries.
+* Throughput dips near a 50/50 mix of positive and negative queries, likely due to poor branch predictability and mixed cache behavior.
+* **Cuckoo filters** show relatively flat throughput because each lookup probes a fixed number of buckets regardless of outcome.
+* **Quotient filters** improve slightly as negative share increases, since negative lookups often terminate early while positives may require scanning runs.
 
-Bloom and XOR filters achieve the highest throughput overall due to predictable memory access and early termination on negative queries.
+### Takeaway
 
-Throughput for Bloom and XOR dips near a 50/50 mix of positive and negative queries. This reflects poor branch predictability and mixed cache behavior, which increase pipeline stalls.
+Lookup performance depends not only on algorithmic complexity but also on control-flow predictability and memory access patterns.
 
-Cuckoo filter throughput remains relatively flat because each lookup probes two buckets regardless of outcome.
+---
 
-Quotient filter throughput improves slightly as the fraction of negative queries increases. Negative lookups often terminate early, while positive lookups may require scanning contiguous runs.
+## 6. Experiment 3: Dynamic Behavior Under Load
 
-Takeaway
-
-Lookup performance depends not only on algorithmic complexity, but also on control-flow predictability and memory access patterns.
-
-6. Experiment 3: Dynamic Behavior Under Load
-Question
+### Question
 
 How do dynamic AMQs behave as load factor increases?
 
-Methodology
+### Methodology
 
-Only dynamic filters (Cuckoo and Quotient) are evaluated
+* Only **Cuckoo** and **Quotient** filters are evaluated
+* Load factor is swept gradually toward capacity
+* Throughput and insertion failures are recorded
 
-Load factor is increased gradually while measuring throughput and failures
+### Results
 
-Analysis
+**Cuckoo Filter**
 
-Cuckoo filters experience increasing eviction pressure as load increases. Throughput degrades and insertion failures appear near capacity.
+![Cuckoo Throughput vs Load](build/plots_a3/cuckoo_load_throughput_vs_load.png)
 
-Quotient filters degrade more smoothly. As load increases, clusters grow and scans become longer, reducing throughput without sudden failure.
+![Cuckoo Insert Failures](build/plots_a3/cuckoo_load_insert_fail_vs_load.png)
 
-Takeaway
+**Quotient Filter**
 
-Cuckoo filters are sensitive to high load, while Quotient filters offer more predictable degradation at the cost of additional space.
+![Quotient Throughput vs Load](build/plots_a3/qf_load_throughput_vs_load.png)
 
-7. Summary of Findings
-Filter	Strengths	Weaknesses
-Bloom	Best space efficiency, simple	No deletions
-XOR	Extremely fast, compact	Static, coarse accuracy control
-Cuckoo	Supports deletions, tunable accuracy	Sensitive to high load
-Quotient	Dynamic, cache-friendly, predictable	Higher metadata overhead
+### Analysis
+
+* **Cuckoo filters** experience rising eviction pressure as load increases, leading to throughput degradation and eventual insertion failures near capacity.
+* **Quotient filters** degrade more smoothly: as clusters grow, scans become longer, reducing throughput without sudden failure.
+
+### Takeaway
+
+Cuckoo filters offer strong performance at moderate load but are sensitive near capacity, while Quotient filters trade peak performance for predictable degradation.
+
+---
+
+## 7. Mixed Workloads
+
+### Question
+
+How do filters behave under mixed query/insert workloads?
+
+### Results
+
+![Cuckoo Mixed Throughput](build/plots_a3/cuckoo_mixed_throughput_vs_qfrac.png)
+
+![Quotient Mixed Throughput](build/plots_a3/qf_mixed_throughput_vs_qfrac.png)
+
+### Analysis
+
+Mixed workloads expose synchronization and structural overheads. Dynamic filters incur additional cost for maintaining structure consistency, while static filters remain unaffected.
+
+---
+
+## 8. Summary of Findings
+
+| Filter   | Strengths                                  | Weaknesses                      |
+| -------- | ------------------------------------------ | ------------------------------- |
+| Bloom    | Best space efficiency, simple              | No deletions                    |
+| XOR      | Extremely fast, compact                    | Static, coarse accuracy control |
+| Cuckoo   | Supports deletions, tunable accuracy       | Sensitive to high load          |
+| Quotient | Dynamic, cache-friendly, predictable decay | Higher metadata overhead        |
 
 No single AMQ dominates across all metrics. The appropriate choice depends on update requirements, space constraints, and workload composition.
 
-8. Conclusion
+---
 
-This project demonstrates that approximate membership filters exhibit fundamentally different tradeoffs when evaluated under realistic workloads. By measuring space usage, false positives, and throughput directly, the results highlight how algorithmic design interacts with memory layout and workload characteristics.
+## 9. Conclusion
+
+This project shows that approximate membership filters exhibit fundamentally different trade-offs when evaluated under realistic workloads. By measuring space usage, false positives, and throughput directly, the experiments highlight how algorithmic structure interacts with memory layout, control flow, and load factor.
 
 Empirical evaluation reveals behaviors that are not obvious from asymptotic analysis alone, underscoring the importance of systems-level benchmarking.
